@@ -1,0 +1,99 @@
+<!DOCTYPE HTML>
+<html>
+       <head>
+
+
+     		  <script>
+   			function writeLog(object) {
+          var pTag = document.createElement("p");
+          pTag.appendChild(document.createTextNode(JSON.stringify(object)));
+          document.getElementById('content').appendChild(pTag);
+        }
+
+        /* 
+         * This is an example Class with annotations 
+         */
+   			function Auto(name) {
+	   			//@Entity
+	
+	   			//@Präfix{"test_"}
+	   			this.id = name;
+	
+	   			//@Color{"red","blue","yellow"}
+	   			//@Präfix{"color_", "title":"foobar"}
+	   			this.color = "blue";
+   			}
+   			
+
+        /*
+         * This is the Annotation-Method.
+         * This will find annotations in your Class and produces an object
+         */
+   			function Annotation(className) {
+          var annotations = [];
+   				var aLines = className.toString().split('\n');
+   				
+   				function getParameters(sParameters) {
+   					var params = new Array();
+   					var aParams = sParameters.split(',');
+   					for(var a = 0; a < aParams.length; a++) {
+						if(aPropertyParams = aParams[a].match(/\"?([^\"]*)\"?:\"?([^\"]*)\"?/)) {
+							params[aPropertyParams[1]] = aPropertyParams[2];
+						} else {
+		    				params.push(aParams[a].replace(/\"/g,''));
+						}
+		    		}
+   					return params;
+   				}
+
+   				function getAnnotationObject(aLines, iIndex) {
+   					data = {};
+   					data.fromLine = iIndex;
+   					var iLimiter = 25, iCounter = 0;
+   					while(!data.object) {
+	   					var sLine = aLines[iIndex];
+   						iCounter++;
+						if(sLine.match(/\/\/@/)) {
+	  				    	var sLine = sLine.replace(/^.*?\/\/@/, '');
+	  				    	if(!data.annotation)
+	  				    		data.annotation = [];
+	  				    	var iAnnotationIndex = data.annotation.push({annotation:sLine.match(/^([^\{]*)/)[0]})-1;
+	  				    	if(sParameters = sLine.match(/\{(.*?)\}/)) {
+	  				    		data.annotation[iAnnotationIndex].parameters = getParameters(sParameters[1]);
+	  				    	}
+	  				  	} else {
+	  				  		if(!data.annotation)
+	  				  			return null;
+	  				  		data.object = sLine.replace(/^\s*/, '');
+	  				  		break;
+	  				  	}
+  				    	if(iCounter >= iLimiter)
+  				    		break;
+  				    	iIndex++;
+  					}
+  					data.toLine = iIndex;
+  					return data;
+   				};
+
+   				for(var i = 1;i<aLines.length;i++) {
+   				  	var data = getAnnotationObject(aLines,i);
+              annotations.push(data);
+   				  	if(data)
+   				  		i = data.toLine;
+   				}
+
+   			}
+
+        writeLog("Example Class:");
+   			writeLog(Auto.toString());
+
+        // Let's find annotations
+        writeLog("Annotations:");
+   			writeLog(Annotation(Auto));
+   			  </script>
+
+       </head>
+       <body>
+              <div id="content"></div>
+       </body>
+</html>
